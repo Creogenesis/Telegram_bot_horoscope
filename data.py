@@ -9,11 +9,15 @@ import time
 import pytz
 
 
+# Сегодняшняя дата, для добавления их в базу данных.
 time_is = str(datetime.now())
 time_is = time_is[:10]
 
+# Завтращняя дата, для добавления в базу данных.
 previous_day = (str(datetime.now() + timedelta(days=1)))[:10]
 
+# Кортеж всех URL сылок для парсиннга. Каждый отдельный знак имеет свою уникальную ссылку.
+# День сегодняшний.
 end_of_url_today = {
     'Овен': '?znak=aries',  # aries
     'Телец': '?znak=taurus',  # taurus
@@ -29,6 +33,8 @@ end_of_url_today = {
     'Рыба': '?znak=pisces',  # pisces
 }
 
+# Кортеж всех URL сылок для парсиннга. Каждый отдельный знак имеет свою уникальную ссылку.
+# День завтрашний.
 end_of_url_tomorrow = {
     'Овен': '?znak=aries&kn=tomorrow',  # aries
     'Телец': '?znak=taurus&kn=tomorrow',  # taurus
@@ -42,7 +48,6 @@ end_of_url_tomorrow = {
     'Казерог': '?znak=capricorn&kn=tomorrow',  # capricorn
     'Водолей': '?znak=aquarius&kn=tomorrow',  # aquarius
     'Рыба': '?znak=pisces&kn=tomorrow',  # pisces
-
 }
 
 # Имя браузера, что бы сервер думал что это человек
@@ -52,10 +57,12 @@ head = {
         '537.36'}
 
 
+# Функция для парсинга данных с сайта.
 def pars_and_clean(One, Two):
 
     convert = []
 
+    # Данные сегоднящнего дня.
     if One:
 
         for item in end_of_url_today.values():
@@ -66,13 +73,14 @@ def pars_and_clean(One, Two):
             full_page = requests.get(url, headers=head)
 
             soup = BeautifulSoup(full_page.content, 'html.parser')
-            convert_price = soup.findAll('div', {'itemprop': 'description'})
+            convert_data = soup.findAll('div', {'itemprop': 'description'})
 
             # Обрабатываем нужные нам данные.
-            convert.append([x.text for x in convert_price])
+            convert.append([x.text for x in convert_data])
 
         return convert
 
+    # Данные завтрашнего дня.
     if Two:
 
         for item in end_of_url_tomorrow.values():
@@ -83,19 +91,21 @@ def pars_and_clean(One, Two):
             full_page = requests.get(url, headers=head)
 
             soup = BeautifulSoup(full_page.content, 'html.parser')
-            convert_price = soup.findAll('div', {'itemprop': 'description'})
+            convert_data = soup.findAll('div', {'itemprop': 'description'})
 
             # Обрабатываем нужные нам данные.
-            convert.append([x.text for x in convert_price])
+            convert.append([x.text for x in convert_data])
 
         return convert
 
 
+# Добавляем даты в список данных.
 def sett(today, tomorrow):
 
     clue = []
     finish = []
 
+    # Данные сегодняшего дня.
     for key in end_of_url_today.keys():
 
         clue.append(str(key))
@@ -109,6 +119,7 @@ def sett(today, tomorrow):
     clues = []
     finish_t = []
 
+    # Данные завтрашнего дня.
     for key in end_of_url_tomorrow.keys():
 
         clues.append(str(key))
@@ -122,6 +133,7 @@ def sett(today, tomorrow):
     return finish, finish_t
 
 
+# Функция для созданния соединения с SQLite3 базы данных.
 def create_connection(path):
     connect = None
     try:
@@ -133,6 +145,7 @@ def create_connection(path):
     return connect
 
 
+# Добавляем свои данные в базу данных.
 def execute_query(connect):
     cursor = connect.cursor()
     try:
@@ -148,6 +161,7 @@ def execute_query(connect):
         print(f"The error '{e}' occurred")
 
 
+# Функция чтения данных из базы данных.
 def execute_read_query(connect, query):
     cursor = connect.cursor()
     try:
@@ -158,6 +172,7 @@ def execute_read_query(connect, query):
         print(f"The error '{e}' occurred")
 
 
+# Удаление всей информации в базе данных.
 def del_query(connect):
     cursor = connect.cursor()
     try:
@@ -168,6 +183,7 @@ def del_query(connect):
         print(f"The error '{e}' occurred")
 
 
+# Вывод всей информации из базы данных.
 def look_for_hor():
     
     select_users = "SELECT * from users"
@@ -177,13 +193,19 @@ def look_for_hor():
         print(user)
 
 
+# Бесконечный цикл для обновления данных в SQLite3.
+# Работает он следующим образов:
+# Каждую минуту скрипт "Просыпается" и проверяет текущее время (по Мосвке). Если в Москве время 12.01, то в это время
+# Сайт обновляет свои данные гороскопа.
+# Скрипт начинает обновлять данные в базе даннных, удаляя старые.
 while True:
 
     # Обновление на сайте происходит по московскому времени (4 утра по нашему)
     moscow_time = datetime.now(pytz.timezone('Europe/Moscow'))
     moscow_time = str(moscow_time)[11:16]
 
-    if moscow_time == "12:33":
+    # Если время по МСК 12.01 то скрипт начинает свою работу.
+    if moscow_time == "00:01":
 
         print('The download process is underway.')
 
@@ -205,8 +227,10 @@ while True:
 
         print("Is's finish.")
 
-        time.sleep(3600)
+        # Отправляем скрип в "Сон"
+        time.sleep(60)
 
+    # Иначе, выходит сообщение о том, что время еще не подошло.
     else:
 
         print("It's not time yet - " + moscow_time)
