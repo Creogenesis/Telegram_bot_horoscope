@@ -1,4 +1,4 @@
-# tel_bot_horoscope
+# Telegram _bot_horoscope
 
 English:
 
