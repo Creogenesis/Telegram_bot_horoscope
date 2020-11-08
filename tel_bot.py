@@ -9,7 +9,7 @@ from datetime import datetime
 
 # Наши данные для входа в систему без банаю
 apihelper.proxy = {'https': 'socks5://127.0.0.1:9150'}
-token = '998152492:AAEcAbf9qADQowC8BivhLsirCv-Iqf9Js3w'
+token = 'TOKEN'
 bot = telebot.TeleBot(token)
 
 # Создание ключевцх кнопок меню.
